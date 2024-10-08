@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Video Stream</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        .container {
+            margin-top: 50px;
+        }
+        img {
+            width: 80%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Live Camera Feed</h1>
+        <img id="stream" src="/video_feed" alt="Video Stream" onerror="this.src='/static/no_streaming.jpg';" />
+    </div>
+
+    <script>
+        // Optional: Refresh the image periodically to ensure the stream stays updated
+        setInterval(function() {
+            var img = document.getElementById('stream');
+            img.src = "/video_feed?" + new Date().getTime();  // Add timestamp to bypass cache
+        }, 5000);  // Reload every 5 seconds
+    </script>
+</body>
+</html>
