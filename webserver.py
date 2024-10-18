@@ -27,7 +27,7 @@ NO_STREAM_IMAGE_PATH = "./static/image.jpg"
 
 def motion_detection():
     no_motion_duration = 0  # Duration without motion
-    motion_timeout = 5  # Seconds before stopping stream
+    motion_timeout = 1  # Seconds before stopping stream
 
     while True:
         motion_detected = GPIO.input(11)
