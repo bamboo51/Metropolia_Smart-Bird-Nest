@@ -2,13 +2,12 @@ import RPi.GPIO as GPIO
 import time
 from camera_stream import start_streaming, stop_streaming, streaming_event
 
-# Setup GPIO
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BOARD)
-GPIO.setup(11, GPIO.IN)  # PIR motion sensor input
-GPIO.setup(13, GPIO.OUT)  # LED output pin
-
 def motion_detection():
+    # Setup GPIO
+    GPIO.setwarnings(False)
+    GPIO.setmode(GPIO.BOARD)
+    GPIO.setup(11, GPIO.IN)  # PIR motion sensor input
+
     no_motion_duration = 0  # Duration without motion
     motion_timeout = 5  # Seconds before stopping stream
 
@@ -19,7 +18,6 @@ def motion_detection():
             print("Intruder detected")
             if not streaming_event.is_set():
                 start_streaming()  # Start streaming when motion is detected
-            GPIO.output(13, 1)  # Turn ON LED
             no_motion_duration = 0  # Reset duration
         else:
             if streaming_event.is_set():
@@ -27,7 +25,6 @@ def motion_detection():
                 if no_motion_duration >= motion_timeout:
                     print("No motion detected for 5 seconds. Stopping stream.")
                     stop_streaming()  # Stop streaming if no motion for a while
-            GPIO.output(13, 0)  # Turn OFF LED
 
         time.sleep(1)  # Brief pause
 

@@ -21,7 +21,7 @@ def video_feed():
     if streaming_event.is_set():
         return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
     else:
-        if os.patht.exists(NO_STREAM_IMAGE_PATH):
+        if os.path.exists(NO_STREAM_IMAGE_PATH):
             return send_file(NO_STREAM_IMAGE_PATH, mimetype='image/png')
         else:
             return "No stream available"
