@@ -24,6 +24,7 @@ def generate_frames():
     """Generator function that yields camera frames to be displayed as a video stream."""
     while streaming_event.is_set():
         frame = picam2.capture_array()
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         _, buffer = cv2.imencode('.jpg', frame)
         frame_bytes = buffer.tobytes()
         yield (b'--frame\r\n'

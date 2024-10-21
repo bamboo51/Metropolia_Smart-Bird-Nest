@@ -6,6 +6,10 @@ app = Flask(__name__)
 
 NO_STREAM_IMAGE_PATH = "./static/image.png"
 
+def start_camera_streaming():
+    if not streaming_event.is_set():
+        streaming_event.set()
+
 # Serve the HTML page with video stream
 @app.route('/')
 def index():
