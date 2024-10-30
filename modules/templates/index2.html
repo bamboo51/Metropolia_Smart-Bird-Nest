@@ -7,14 +7,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css.css') }}">
 </head>
 <body>
-    <div id="mySidenav" class="sidenav">
-        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        <a href="#">Data</a>
-        <a href="#">Humidity</a>
-    </div>
     <div class="container">
         <h1>Live Camera Feed</h1>
-        <span style="font-size:30px;cursor:pointer" onclick="openNav()">&#9776; open</span>
         <img id="stream" src="/video_feed" alt="Video Stream" onerror="this.src='/static/no_streaming.png';" />
         
         <!-- Control Buttons -->
@@ -22,15 +16,6 @@
             <button id="start-btn">Start Stream</button>
             <button id="stop-btn">Stop Stream</button>
         </div>
-
-        <h2>Latest Recording</h2>
-        {% if latest_recording %}
-            <video width="640" height="480" controls>
-                <source src="{{url_for('static', filename='recordings/recording_'+latest_recording.split('_')[-1])}}" type="'video/avi">
-            </video>
-        {% else %}
-            <p>No recordings available</p>
-        {% endif %}
     </div>
 
     <script src="{{ url_for('static', filename='java.js') }}"></script>

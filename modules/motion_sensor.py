@@ -9,7 +9,7 @@ def motion_detection():
     GPIO.setup(11, GPIO.IN)  # PIR motion sensor input
 
     no_motion_duration = 0  # Duration without motion
-    motion_timeout = 5  # Seconds before stopping stream
+    motion_timeout = 30  # Seconds before stopping stream
 
     while True:
         motion_detected = GPIO.input(11)
