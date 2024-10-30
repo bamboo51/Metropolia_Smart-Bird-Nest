@@ -17,4 +17,10 @@ window.onload = function () {
     stopBtn.addEventListener('click', function() {
         videoStream.src = "/static/no_streaming.png";  // Placeholder image when stopped
     });
+
+    var socket = io();
+
+    socket.on('light_level_update', function(lightLevel){
+        document.getElementById('light-level').textContent = 'Light level: ' + lightLevel.toFixed(2) + 'lux';
+    });
 };

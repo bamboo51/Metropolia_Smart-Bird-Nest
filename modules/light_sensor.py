@@ -1,6 +1,10 @@
 import smbus2
 import time
 import RPi.GPIO as GPIO
+from flask_socketio import SocketIO, emit
+
+# create a SocketIO instance
+socketio = SocketIO()
 
 # LED setup
 LED_PIN = 13
@@ -40,6 +44,7 @@ def monitor_light_sensor():
         if light_level is not None:
             print(f"Light level: {light_level:.2f} lux")
             
+            socketio.emit('light_level_update', light_level)
             if light_level < 20:
                 GPIO.output(LED_PIN, GPIO.LOW)
             else:

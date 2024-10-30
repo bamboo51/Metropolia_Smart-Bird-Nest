@@ -1,14 +1,24 @@
 from flask import Flask, Response, render_template, send_file
 from camera_stream import generate_frames, streaming_event
+from flask_socketio import SocketIO, emit
 import os
 
 app = Flask(__name__)
+socketio = SocketIO(app)
 
 NO_STREAM_IMAGE_PATH = "./static/image.png"
 
 def start_camera_streaming():
     if not streaming_event.is_set():
         streaming_event.set()
+
+@socketio.on('connect')
+def handle_connect():
+    print('Client connected')
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('Client disconnected')
 
 # Serve the HTML page with video stream
 @app.route('/')
@@ -27,5 +37,5 @@ def video_feed():
             return "No stream available"
         
 def run_flask():
-    app.run(host='0.0.0.0', port=5000, debug=False, threaded=True)
+    socketio.run(app, host='0.0.0.0', port=5000, debug=False)
 
