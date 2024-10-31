@@ -13,7 +13,7 @@ def start_camera_streaming():
 # Serve the HTML page with video stream
 @app.route('/')
 def index():
-    return render_template('index2.html')
+    return render_template('index.html')
 
 @app.route('/video_feed')
 def video_feed():
