@@ -8,6 +8,7 @@ window.onload = function () {
         videoStream.src = "/video_feed?" + new Date().getTime();  // Add timestamp to bypass cache
     }, 5000);  // Reload every 5 seconds
 
+    /*
     // Start Stream
     startBtn.addEventListener('click', function() {
         videoStream.src = "/video_feed";
@@ -17,9 +18,11 @@ window.onload = function () {
     stopBtn.addEventListener('click', function() {
         videoStream.src = "/static/no_streaming.png";  // Placeholder image when stopped
     });
+    */
 
     // light sensor reading
     function lightSensorStatus(){
+        console.log("light sensor loading...");
         fetch('/light_sensor_status')
         .then(response => response.json())
         .then(data => {
@@ -30,4 +33,5 @@ window.onload = function () {
             document.getElementById('lightsensor-status').textContent = "Error";
         });
     }
+    setInterval(lightSensorStatus, 1000);
 };
