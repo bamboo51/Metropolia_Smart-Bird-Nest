@@ -3,6 +3,7 @@ import time
 from sensors.motion_sensor import motion_detection
 from web.app import run_flask
 from sensors.light_sensor import monitor_light_sensor
+from sensors.temperature import monitor_temperature
 
 try:
     motion_thread = threading.Thread(target=motion_detection)
@@ -16,6 +17,10 @@ try:
     light_sensor_thread = threading.Thread(target=monitor_light_sensor)
     light_sensor_thread.daemon = True
     light_sensor_thread.start()
+
+    temperature_sensor_thread = threading.Thread(target=monitor_temperature)
+    temperature_sensor_thread.daemon = True
+    temperature_sensor_thread.start()
 
     while True:
         time.sleep(0.1)

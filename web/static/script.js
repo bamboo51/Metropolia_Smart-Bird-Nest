@@ -26,7 +26,7 @@ window.onload = function () {
         fetch('/light_sensor_status')
         .then(response => response.json())
         .then(data => {
-            document.getElementById('lightsensor-status').textContent = data.light_level + " lux";
+            document.getElementById('lightsensor-status').textContent = data.light_level.toFixed(2) + " lux";
         })
         .catch(error => {
             console.error('Error fetching sensor data:', error);
@@ -34,4 +34,19 @@ window.onload = function () {
         });
     }
     setInterval(lightSensorStatus, 1000);
+
+    function tempSensorStatus(){
+        console.log("temp sensor loading...")
+        fetch('/temp_humd_status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('tempsensor-status').textContent = data.temperature + " C";
+            document.getElementById('humdsensor-status').textContent = data.humidity + " %";
+        })
+        .catch(error =>{
+            document.getElementById('tempsensor-status').textContent = "Error";
+            document.getElementById('humdsensor-status').textContent = "Error";
+        })
+    }
+    setInterval(tempSensorStatus, 1000);
 };

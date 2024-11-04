@@ -1,5 +1,5 @@
 import pigpio
-import DHT22
+import sensors.DHT22 as DHT22
 from time import sleep
 import os
 
@@ -11,7 +11,6 @@ dht22.trigger()
 
 # We want our sleep time to be above 2 seconds.
 sleepTime = 3
-os.system("sudo pigpiod")
 
 def readDHT22():
     # Get a new reading
@@ -21,8 +20,9 @@ def readDHT22():
     temp = '%.2f' % (dht22.temperature())
     return (humidity, temp)
 
-while True:
-    humidity, temperature = readDHT22()
-    print("Humidity is: " + humidity + "%")
-    print("Temperature is: " + temperature + "C")
-    sleep(sleepTime)
+def monitor_temperature():
+    while True:
+        humidity, temperature = readDHT22()
+        print("Humidity is: " + humidity + "%")
+        print("Temperature is: " + temperature + "C")
+        sleep(sleepTime)
