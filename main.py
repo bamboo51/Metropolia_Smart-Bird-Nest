@@ -1,7 +1,7 @@
 import threading
 import time
 from motion_sensor import motion_detection
-from web_server import run_flask
+from web.app import run_flask
 from light_sensor import monitor_light_sensor
 
 try:
