@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Streaming{% endblock%}
+
+{% block content %}
+<div class="d-flex justify-content-center py-3">
+    <img id="stream" src="/video_feed" class="rounded" alt="Video Stream"
+        onerror="this.src='/static/no_streaming.png';" />
+</div>
+<div class="d-flex gap-5 justify-content-center py-1">
+    <button class="btn btn-primary d-inline-flex align-items-center" type="button">
+        Start Streaming
+    </button>
+    <button class="btn btn-outline-secondary d-inline-flex align-items-center" type="button">
+        Stop Streaming
+    </button>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}
