@@ -1,8 +1,8 @@
 import threading
 import time
-from motion_sensor import motion_detection
+from sensors.motion_sensor import motion_detection
 from web.app import run_flask
-from light_sensor import monitor_light_sensor
+from sensors.light_sensor import monitor_light_sensor
 
 try:
     motion_thread = threading.Thread(target=motion_detection)
@@ -23,6 +23,6 @@ try:
 except KeyboardInterrupt:
     print("Exiting program.")
 finally:
-    from motion_sensor import stop_all
+    from sensors.motion_sensor import stop_all
     stop_all()
     print("Program exited.")
