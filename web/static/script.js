@@ -17,4 +17,17 @@ window.onload = function () {
     stopBtn.addEventListener('click', function() {
         videoStream.src = "/static/no_streaming.png";  // Placeholder image when stopped
     });
+
+    // light sensor reading
+    function lightSensorStatus(){
+        fetch('/light_sensor_status')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('lightsensor-status').textContent = data.light_level + " lux";
+        })
+        .catch(error => {
+            console.error('Error fetching sensor data:', error);
+            document.getElementById('lightsensor-status').textContent = "Error";
+        });
+    }
 };

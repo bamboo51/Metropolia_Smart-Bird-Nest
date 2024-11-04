@@ -1,9 +1,10 @@
-from flask import Flask, Response, render_template, send_file
+from flask import Flask, Response, render_template, send_file, jsonify
 from flask_bootstrap import Bootstrap5
 import sys
 sys.path.append("../")
-from sensors.camera_stream import generate_frames, streaming_event
+# from sensors.camera_stream import generate_frames, streaming_event
 import os
+from sensors.light_sensor import read_light_sensor
 
 app = Flask(__name__)
 bootstrap = Bootstrap5(app)
@@ -19,6 +20,15 @@ def index():
 def streaming():
     return render_template('streaming.html')
 
+@app.route('/light_sensor_status')
+def light_sensor_status():
+    light_level = read_light_sensor()
+    if light_level is not None:
+        return jsonify({"light_level": light_level})
+    else:
+        return jsonify({"light_level": "Error"}), 500
+
+'''
 @app.route('/video_feed')
 def video_feed():
     """Video streaming route. Put this in the src attribute of an img tag"""
@@ -29,7 +39,7 @@ def video_feed():
             return send_file(NO_STREAM_IMAGE_PATH, mimetype='image/png')
         else:
             return "No stream available"
-
+'''
 def run_flask():
     app.run(host='0.0.0.0', port=5000, debug=False)
 

@@ -3,16 +3,29 @@
 
 {% block content %}
 <div class="d-flex justify-content-center py-3">
-    <img id="stream" src="/video_feed" class="rounded" alt="Video Stream"
-        onerror="this.src='/static/no_streaming.png';" />
-</div>
-<div class="d-flex gap-5 justify-content-center py-1">
-    <button class="btn btn-primary d-inline-flex align-items-center" type="button">
-        Start Streaming
-    </button>
-    <button class="btn btn-outline-secondary d-inline-flex align-items-center" type="button">
-        Stop Streaming
-    </button>
+    <div class="d-flex flex-row gap-4">
+        <!-- Video Stream Section -->
+        <div>
+            <img id="stream" src="/video_feed" class="rounded" alt="Video Stream"
+                onerror="this.src='/static/no_streaming.png';" />
+            <div class="d-flex gap-5 justify-content-center py-1 mt-3">
+                <button class="btn btn-primary d-inline-flex align-items-center" type="button">
+                    Start Streaming
+                </button>
+                <button class="btn btn-outline-secondary d-inline-flex align-items-center" type="button">
+                    Stop Streaming
+                </button>
+            </div>
+        </div>
+        
+        <!-- Light Sensor Status Section -->
+        <div id="sensor-status" class="p-3 border rounded bg-light">
+            <h5>Sensor Status</h5>
+            <p>Light sensor: <span id="lightsensor-status">Loading...</span></p>
+            <p>Temperature sensor: <span id="sensor2-status">Loading...</span></p>
+            <!-- Add more sensors as needed -->
+        </div>
+    </div>
 </div>
 {% endblock %}
 
