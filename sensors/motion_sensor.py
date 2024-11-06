@@ -1,6 +1,6 @@
 import RPi.GPIO as GPIO
 import time
-from camera_stream import start_streaming, stop_streaming, streaming_event
+from sensors.camera_stream import start_streaming, stop_streaming, streaming_event
 
 def motion_detection():
     # Setup GPIO
