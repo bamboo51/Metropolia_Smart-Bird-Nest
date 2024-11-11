@@ -1,148 +1,186 @@
 from flask import Flask, Response, render_template
 import cv2
+import numpy as np
 import pyaudio
 import threading
-import subprocess as sp
-import numpy as np
 import time
+import av
+import io
 from picamera2 import Picamera2
-import shlex
+import queue
 
-app = Flask(__name__)
-
-# Audio/Video Configuration
-FRAME_RATE = 30
-AUDIO_RATE = 44100
-AUDIO_CHANNELS = 1
-WIDTH = 640
-HEIGHT = 480
-RTSP_PORT = 8554
-STREAM_URL = f'rtsp://0.0.0.0:{RTSP_PORT}/stream'
-
-# Initialize PiCamera
-picam2 = Picamera2()
-camera_config = picam2.create_preview_configuration(
-    main={"size": (WIDTH, HEIGHT)},
-    controls={"FrameDurationLimits": (33333, 33333)}
-)
-picam2.configure(camera_config)
-picam2.start()
-
-class RTSPStreamer:
+class CombinedStream:
     def __init__(self):
-        self.running = False
-        self.process = None
+        # Initialize audio settings
+        self.CHUNK = 1024
+        self.FORMAT = pyaudio.paFloat32
+        self.CHANNELS = 1
+        self.RATE = 44100
         
-        # FFmpeg command for combined streaming
-        self.command = [
-            'ffmpeg',
-            # Input video options (from pipe)
-            '-f', 'rawvideo',
-            '-pix_fmt', 'bgr24',
-            '-s', f'{WIDTH}x{HEIGHT}',
-            '-r', str(FRAME_RATE),
-            '-i', 'pipe:0',
-            # Input audio options (from pipe)
-            '-f', 'f32le',
-            '-ar', str(AUDIO_RATE),
-            '-ac', str(AUDIO_CHANNELS),
-            '-i', 'pipe:1',
-            # Output options
-            '-c:v', 'libx264',
-            '-preset', 'ultrafast',
-            '-tune', 'zerolatency',
-            '-c:a', 'aac',
-            '-ar', str(AUDIO_RATE),
-            '-b:a', '128k',
-            '-flags', 'low_delay',
-            '-f', 'rtsp',
-            '-rtsp_transport', 'tcp',
-            STREAM_URL
-        ]
-    
-    def start(self):
-        """Start the RTSP streaming process"""
-        self.running = True
-        self.process = sp.Popen(
-            self.command,
-            stdin=sp.PIPE,
-            stdout=sp.DEVNULL,
-            stderr=sp.DEVNULL
-        )
+        # Initialize video settings
+        self.WIDTH = 1280
+        self.HEIGHT = 720
+        self.FPS = 30
+        
+        # Initialize queues for audio and video frames
+        self.video_queue = queue.Queue(maxsize=10)
+        self.audio_queue = queue.Queue(maxsize=10)
+        
+        # Setup camera
+        self.setup_camera()
+        
+        # Setup audio
+        self.setup_audio()
+        
+        # Create container for combined stream
+        self.output_container = io.BytesIO()
+        self.combined_stream = None
         
         # Start capture threads
-        self.video_thread = threading.Thread(target=self._capture_video)
-        self.audio_thread = threading.Thread(target=self._capture_audio)
-        
-        self.video_thread.daemon = True
-        self.audio_thread.daemon = True
-        
-        self.video_thread.start()
-        self.audio_thread.start()
-    
-    def stop(self):
-        """Stop the streaming process"""
-        self.running = False
-        if self.process:
-            self.process.terminate()
-            self.process.wait()
-    
-    def _capture_video(self):
-        """Capture and pipe video frames to FFmpeg"""
-        while self.running:
-            try:
-                frame = picam2.capture_array()
-                self.process.stdin.write(frame.tobytes())
-            except Exception as e:
-                print(f"Video capture error: {e}")
-                break
-    
-    def _capture_audio(self):
-        """Capture and pipe audio to FFmpeg"""
-        CHUNK = 1024
-        audio = pyaudio.PyAudio()
-        
-        stream = audio.open(
-            format=pyaudio.paFloat32,
-            channels=AUDIO_CHANNELS,
-            rate=AUDIO_RATE,
-            input=True,
-            frames_per_buffer=CHUNK
-        )
-        
-        while self.running:
-            try:
-                data = stream.read(CHUNK, exception_on_overflow=False)
-                self.process.stdin.write(data)
-            except Exception as e:
-                print(f"Audio capture error: {e}")
-                break
-        
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
+        self.running = True
+        self.start_capture_threads()
 
-# Global streamer instance
-streamer = RTSPStreamer()
+    def setup_camera(self):
+        self.picam = Picamera2()
+        video_config = self.picam.create_video_configuration(
+            main={"size": (self.WIDTH, self.HEIGHT), "format": "RGB888"}
+        )
+        self.picam.configure(video_config)
+        self.picam.start()
+
+    def setup_audio(self):
+        self.audio = pyaudio.PyAudio()
+        self.audio_stream = self.audio.open(
+            format=self.FORMAT,
+            channels=self.CHANNELS,
+            rate=self.RATE,
+            input=True,
+            frames_per_buffer=self.CHUNK
+        )
+
+    def start_capture_threads(self):
+        # Start video capture thread
+        self.video_thread = threading.Thread(target=self.capture_video)
+        self.video_thread.daemon = True
+        self.video_thread.start()
+
+        # Start audio capture thread
+        self.audio_thread = threading.Thread(target=self.capture_audio)
+        self.audio_thread.daemon = True
+        self.audio_thread.start()
+
+        # Start stream combination thread
+        self.combine_thread = threading.Thread(target=self.combine_streams)
+        self.combine_thread.daemon = True
+        self.combine_thread.start()
+
+    def capture_video(self):
+        while self.running:
+            frame = self.picam.capture_array()
+            # Convert to BGR for OpenCV compatibility
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
+            
+            try:
+                self.video_queue.put(frame, timeout=1)
+            except queue.Full:
+                self.video_queue.get()  # Remove oldest frame
+                self.video_queue.put(frame)
+
+    def capture_audio(self):
+        while self.running:
+            audio_data = self.audio_stream.read(self.CHUNK)
+            try:
+                self.audio_queue.put(audio_data, timeout=1)
+            except queue.Full:
+                self.audio_queue.get()  # Remove oldest chunk
+                self.audio_queue.put(audio_data)
+
+    def combine_streams(self):
+        # Create output container
+        output = av.open('rtsp://0.0.0.0:8554/stream', mode='w', format='rtsp')
+        
+        # Add streams
+        video_stream = output.add_stream('h264', rate=self.FPS)
+        video_stream.width = self.WIDTH
+        video_stream.height = self.HEIGHT
+        video_stream.pix_fmt = 'yuv420p'
+        
+        audio_stream = output.add_stream('aac', rate=self.RATE)
+        audio_stream.channels = self.CHANNELS
+
+        frame_count = 0
+        start_time = time.time()
+
+        while self.running:
+            # Get video frame
+            try:
+                video_frame = self.video_queue.get(timeout=1)
+                # Convert to PyAV frame
+                frame = av.VideoFrame.from_ndarray(video_frame, format='bgr24')
+                packet = video_stream.encode(frame)
+                if packet:
+                    output.mux(packet)
+            except queue.Empty:
+                continue
+
+            # Get audio chunks
+            try:
+                audio_data = self.audio_queue.get(timeout=1)
+                # Convert to PyAV frame
+                audio_frame = av.AudioFrame.from_ndarray(
+                    np.frombuffer(audio_data, dtype=np.float32),
+                    layout='mono',
+                    rate=self.RATE
+                )
+                packet = audio_stream.encode(audio_frame)
+                if packet:
+                    output.mux(packet)
+            except queue.Empty:
+                continue
+
+            frame_count += 1
+            
+            # Maintain FPS
+            elapsed_time = time.time() - start_time
+            expected_frame_count = int(elapsed_time * self.FPS)
+            if frame_count > expected_frame_count:
+                time.sleep(1/self.FPS)
+
+    def get_stream(self):
+        return self.output_container.getvalue()
+
+    def cleanup(self):
+        self.running = False
+        self.video_thread.join()
+        self.audio_thread.join()
+        self.combine_thread.join()
+        self.picam.close()
+        self.audio_stream.stop_stream()
+        self.audio_stream.close()
+        self.audio.terminate()
+
+# Flask application
+app = Flask(__name__)
+stream = CombinedStream()
 
 @app.route('/')
 def index():
-    """Streaming page"""
-    return render_template('index.html', stream_url=STREAM_URL)
+    return render_template('index.html')
 
-@app.route('/start')
-def start_stream():
-    """Start streaming"""
-    if not streamer.running:
-        streamer.start()
-    return {'status': 'started'}
+@app.route('/stream')
+def stream_feed():
+    def generate():
+        while True:
+            yield stream.get_stream()
+            time.sleep(1/30)  # Control frame rate
 
-@app.route('/stop')
-def stop_stream():
-    """Stop streaming"""
-    if streamer.running:
-        streamer.stop()
-    return {'status': 'stopped'}
+    return Response(
+        generate(),
+        mimetype='application/x-rtsp-tunnelled'
+    )
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, threaded=True)
+    try:
+        app.run(host='0.0.0.0', port=5000, threaded=True)
+    finally:
+        stream.cleanup()
