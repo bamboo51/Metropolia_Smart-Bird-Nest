@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebRTC Video Stream</title>
+</head>
+<body>
+  <h1>Raspberry Pi WebRTC Stream</h1>
+  <video id="video" autoplay playsinline></video>
+
+  <script>
+    const videoElement = document.getElementById("video");
+    const pc = new RTCPeerConnection();
+
+    // Display remote video
+    pc.ontrack = (event) => {
+      if (videoElement.srcObject !== event.streams[0]) {
+        videoElement.srcObject = event.streams[0];
+      }
+    };
+
+    async function startStream() {
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      const response = await fetch("/offer", {
+        method: "POST",
+        body: JSON.stringify({
+          sdp: pc.localDescription.sdp,
+          type: pc.localDescription.type,
+        }),
+        headers: { "Content-Type": "application/json" },
+      });
+      const answer = await response.json();
+      await pc.setRemoteDescription(answer);
+    }
+
+    startStream();
+  </script>
+</body>
+</html>
