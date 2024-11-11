@@ -13,7 +13,7 @@ class CombinedStream:
     def __init__(self):
         # Initialize audio settings
         self.CHUNK = 1024
-        self.FORMAT = pyaudio.paFloat32
+        self.FORMAT = pyaudio.paInt16  # Changed to Int16 for better compatibility
         self.CHANNELS = 1
         self.RATE = 44100
         
@@ -33,8 +33,7 @@ class CombinedStream:
         self.setup_audio()
         
         # Create container for combined stream
-        self.output_container = io.BytesIO()
-        self.combined_stream = None
+        self.output_container = av.open('output.mp4', mode='w')
         
         # Start capture threads
         self.running = True
@@ -95,73 +94,91 @@ class CombinedStream:
                 self.audio_queue.get()  # Remove oldest chunk
                 self.audio_queue.put(audio_data)
 
-    def combine_streams(self):
-        # Create output container
-        output = av.open('rtsp://0.0.0.0:8554/stream', mode='w', format='rtsp')
+    def create_audio_frame(self, audio_data):
+        """Convert audio data to a format suitable for PyAV"""
+        # Convert bytes to numpy array
+        samples = np.frombuffer(audio_data, dtype=np.int16)
         
-        # Add streams
-        video_stream = output.add_stream('h264', rate=self.FPS)
+        # Create audio frame
+        frame = av.AudioFrame.from_ndarray(
+            samples,
+            format='s16',  # signed 16-bit
+            layout='mono'  # single channel
+        )
+        frame.rate = self.RATE
+        
+        return frame
+
+    def combine_streams(self):
+        # Add streams to output container
+        video_stream = self.output_container.add_stream('h264', rate=self.FPS)
         video_stream.width = self.WIDTH
         video_stream.height = self.HEIGHT
         video_stream.pix_fmt = 'yuv420p'
         
-        audio_stream = output.add_stream('aac', rate=self.RATE)
+        audio_stream = self.output_container.add_stream('aac', rate=self.RATE)
         audio_stream.channels = self.CHANNELS
 
-        frame_count = 0
-        start_time = time.time()
-
+        pts = 0
+        audio_pts = 0
+        
         while self.running:
-            # Get video frame
+            # Process video
             try:
                 video_frame = self.video_queue.get(timeout=1)
-                # Convert to PyAV frame
-                frame = av.VideoFrame.from_ndarray(video_frame, format='bgr24')
-                packet = video_stream.encode(frame)
-                if packet:
-                    output.mux(packet)
+                av_frame = av.VideoFrame.from_ndarray(video_frame, format='bgr24')
+                av_frame.pts = pts
+                pts += 1
+                
+                for packet in video_stream.encode(av_frame):
+                    self.output_container.mux(packet)
             except queue.Empty:
                 continue
 
-            # Get audio chunks
+            # Process audio
             try:
                 audio_data = self.audio_queue.get(timeout=1)
-                # Convert to PyAV frame
-                audio_frame = av.AudioFrame.from_ndarray(
-                    np.frombuffer(audio_data, dtype=np.float32),
-                    layout='mono',
-                    rate=self.RATE
-                )
-                packet = audio_stream.encode(audio_frame)
-                if packet:
-                    output.mux(packet)
+                audio_frame = self.create_audio_frame(audio_data)
+                audio_frame.pts = audio_pts
+                audio_pts += audio_frame.samples
+                
+                for packet in audio_stream.encode(audio_frame):
+                    self.output_container.mux(packet)
             except queue.Empty:
                 continue
 
-            frame_count += 1
-            
-            # Maintain FPS
-            elapsed_time = time.time() - start_time
-            expected_frame_count = int(elapsed_time * self.FPS)
-            if frame_count > expected_frame_count:
-                time.sleep(1/self.FPS)
+            # Control frame rate
+            time.sleep(1/self.FPS)
 
     def get_stream(self):
-        return self.output_container.getvalue()
+        return self.output_container
 
     def cleanup(self):
         self.running = False
-        self.video_thread.join()
-        self.audio_thread.join()
-        self.combine_thread.join()
-        self.picam.close()
-        self.audio_stream.stop_stream()
-        self.audio_stream.close()
-        self.audio.terminate()
+        if hasattr(self, 'video_thread'):
+            self.video_thread.join()
+        if hasattr(self, 'audio_thread'):
+            self.audio_thread.join()
+        if hasattr(self, 'combine_thread'):
+            self.combine_thread.join()
+            
+        # Flush streams
+        if hasattr(self, 'output_container'):
+            self.output_container.close()
+            
+        if hasattr(self, 'picam'):
+            self.picam.close()
+            
+        if hasattr(self, 'audio_stream'):
+            self.audio_stream.stop_stream()
+            self.audio_stream.close()
+            
+        if hasattr(self, 'audio'):
+            self.audio.terminate()
 
 # Flask application
 app = Flask(__name__)
-stream = CombinedStream()
+stream = None
 
 @app.route('/')
 def index():
@@ -169,18 +186,32 @@ def index():
 
 @app.route('/stream')
 def stream_feed():
+    global stream
+    if stream is None:
+        stream = CombinedStream()
+
     def generate():
-        while True:
-            yield stream.get_stream()
-            time.sleep(1/30)  # Control frame rate
+        try:
+            while True:
+                data = stream.get_stream().read(1024)
+                if not data:
+                    break
+                yield (b'--frame\r\n'
+                       b'Content-Type: video/mp4\r\n\r\n' + data + b'\r\n')
+        except Exception as e:
+            print(f"Streaming error: {e}")
+        finally:
+            if stream:
+                stream.cleanup()
 
     return Response(
         generate(),
-        mimetype='application/x-rtsp-tunnelled'
+        mimetype='multipart/x-mixed-replace; boundary=frame'
     )
 
 if __name__ == '__main__':
     try:
         app.run(host='0.0.0.0', port=5000, threaded=True)
     finally:
-        stream.cleanup()
+        if stream:
+            stream.cleanup()
