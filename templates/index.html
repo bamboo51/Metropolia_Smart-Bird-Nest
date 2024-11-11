@@ -1,40 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Combined RTSP Stream</title>
+    <title>Pi Camera and Audio Stream</title>
     <style>
         .container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f0f0f0;
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
         }
-        #streamPlayer {
+        .video-container {
+            margin-bottom: 20px;
+        }
+        .video-feed {
             max-width: 100%;
-            max-height: 80vh;
+            height: auto;
+            border: 2px solid #333;
+            border-radius: 8px;
+        }
+        .audio-container {
+            margin-top: 20px;
+        }
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <video id="streamPlayer" autoplay controls>
-            <source src="{{ url_for('stream_feed') }}" type="application/x-rtsp-tunnelled">
-            Your browser doesn't support RTSP streaming.
-        </video>
+        <div class="video-container">
+            <img class="video-feed" src="{{ url_for('video_feed') }}" alt="Video Stream">
+        </div>
+        <div class="audio-container">
+            <audio id="audioPlayer" autoplay>
+                <source src="{{ url_for('audio_feed') }}" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        <div class="status" id="statusDiv">Stream Status: Connected</div>
     </div>
 
     <script>
-        const player = document.getElementById('streamPlayer');
+        // Handle video stream errors and reconnection
+        const videoFeed = document.querySelector('.video-feed');
+        const statusDiv = document.getElementById('statusDiv');
         
-        player.addEventListener('error', (e) => {
-            console.error('Stream error:', e);
-            // Attempt to reconnect after 5 seconds
+        videoFeed.onerror = function() {
+            statusDiv.textContent = 'Stream Status: Reconnecting...';
             setTimeout(() => {
-                player.load();
-                player.play();
-            }, 5000);
-        });
+                videoFeed.src = "{{ url_for('video_feed') }}";
+            }, 1000);
+        };
+
+        videoFeed.onload = function() {
+            statusDiv.textContent = 'Stream Status: Connected';
+        };
+
+        // Handle audio stream
+        const audioPlayer = document.getElementById('audioPlayer');
+        
+        audioPlayer.onerror = function() {
+            console.log('Audio stream error, attempting to reconnect...');
+            setTimeout(() => {
+                audioPlayer.src = "{{ url_for('audio_feed') }}";
+                audioPlayer.load();
+                audioPlayer.play();
+            }, 1000);
+        };
+
+        // Periodic check to ensure streams are still active
+        setInterval(() => {
+            if (videoFeed.naturalWidth === 0) {
+                videoFeed.src = "{{ url_for('video_feed') }}";
+            }
+        }, 5000);
     </script>
 </body>
 </html>
