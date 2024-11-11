@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Synchronized Raspberry Pi Streaming</title>
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        .video-container {
+            margin-bottom: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+        }
+        audio {
+            width: 100%;
+        }
+        .sync-status {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+        }
+    </style>
+    <script>
+        // Initialize media elements with precise timing
+        let videoStart = 0;
+        let audioStart = 0;
+
+        function initializeSync() {
+            const video = document.querySelector('#videoStream');
+            const audio = document.querySelector('#audioStream');
+
+            // Record start times
+            videoStart = performance.now();
+            audio.addEventListener('play', () => {
+                audioStart = performance.now();
+            });
+
+            // Monitor sync status
+            setInterval(updateSyncStatus, 1000);
+        }
+
+        function updateSyncStatus() {
+            fetch('/sync_status')
+                .then(response => response.json())
+                .then(data => {
+                    document.querySelector('#syncStatus').innerHTML = `
+                        Video Buffer: ${data.video_queue_size} frames<br>
+                        Audio Buffer: ${data.audio_queue_size} chunks<br>
+                        Sync Queue: ${data.sync_queue_size} packets
+                    `;
+                });
+        }
+
+        // Handle stream errors and reconnection
+        function handleVideoError() {
+            const img = document.querySelector('#videoStream');
+            img.src = "{{ url_for('video_feed') }}?" + new Date().getTime();
+        }
+
+        function handleAudioError() {
+            const audio = document.querySelector('#audioStream');
+            audio.src = "{{ url_for('audio_feed') }}?" + new Date().getTime();
+            audio.load();
+            audio.play();
+        }
+
+        // Initialize when page loads
+        window.onload = initializeSync;
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Synchronized Raspberry Pi Streaming</h1>
+        <div class="video-container">
+            <img id="videoStream" 
+                 src="{{ url_for('video_feed') }}" 
+                 alt="Video stream"
+                 onerror="handleVideoError()">
+        </div>
+        <div class="audio-container">
+            <audio id="audioStream" 
+                   controls 
+                   autoplay 
+                   onerror="handleAudioError()">
+                <source src="{{ url_for('audio_feed') }}" type="audio/wav">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+        <div class="sync-status" id="syncStatus">
+            Initializing sync status...
+        </div>
+    </div>
+</body>
+</html>
