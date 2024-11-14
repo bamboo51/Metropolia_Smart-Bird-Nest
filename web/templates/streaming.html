@@ -1,27 +1,81 @@
 {% extends "base.html" %}
-{% block title %}Streaming{% endblock%}
+{% block title %}Streaming{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-center py-3">
-    <div class="d-flex flex-row gap-4">
-        <!-- Video Stream Section -->
-        <div>
-            <img id="stream" src="/video_feed" class="rounded" alt="Video Stream"
-                onerror="this.src='/static/no_streaming.png';" />
-        </div>
-        
-        <!-- Light Sensor Status Section -->
-        <div id="sensor-status" class="p-3 border rounded bg-light">
-            <h5>Sensor Status</h5>
-            <p>Light: <span id="lightsensor-status">Loading...</span></p>
-            <p>Temperature: <span id="tempsensor-status">Loading...</span></p>
-            <p>Humidity: <span id="humdsensor-status">Loading...</span></p>
-            <!-- Add more sensors as needed -->
+<main>
+    <div class="container px-4 py-4">
+        <div class="row">
+            <!-- Video Stream Section -->
+            <div class="col-lg-10 col-md-9 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Live Stream</h5>
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <img id="stream" src="/video_feed" class="img-fluid rounded" style="max-height: 80vh; width: auto;" 
+                             alt="Video Stream" onerror="this.src='/static/no_streaming.png';" />
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Sensor Status Section -->
+            <div class="col-lg-2 col-md-3 mb-3">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0 fs-6">Sensors</h5>
+                    </div>
+                    <div class="card-body p-2">
+                        <div class="sensor-grid">
+                            <div class="sensor-item">
+                                <i class="fas fa-lightbulb"></i>
+                                <h6 class="mt-2 mb-1 fs-6">Light</h6>
+                                <p id="lightsensor-status" class="mb-0 small">Loading...</p>
+                            </div>
+                            <div class="sensor-item">
+                                <i class="fas fa-thermometer-half"></i>
+                                <h6 class="mt-2 mb-1 fs-6">Temp</h6>
+                                <p id="tempsensor-status" class="mb-0 small">Loading...</p>
+                            </div>
+                            <div class="sensor-item">
+                                <i class="fas fa-tint"></i>
+                                <h6 class="mt-2 mb-1 fs-6">Humidity</h6>
+                                <p id="humdsensor-status" class="mb-0 small">Loading...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-</div>
+</main>
+
+<style>
+.sensor-grid {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.sensor-item {
+    text-align: center;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    border-radius: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.sensor-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sensor-item i {
+    font-size: 1.25rem;
+    color: #0d6efd;
+}
+</style>
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 {% endblock %}
