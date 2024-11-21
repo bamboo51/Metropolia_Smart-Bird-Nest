@@ -19,10 +19,29 @@ def save_to_database(timestamp, bird_species, audio_path, image_path=None):
 def analyze_bird_sound(audio_path, timestamp):
     recording = Recording(analyzer, audio_path)
     recording.analyze()
+    print(recording.detections)
     
-    species = recording.detections[0]['common_name']
+    try:
+        if recording.detections and recording.detections[0]['confidence'] > 0.80:
+            species = recording.detections[0]['common_name']
+            print(f"Detected bird: {species}")
+            image_path = f"./recordings/image_{timestamp}.jpg"
+            save_to_database(timestamp, species, audio_path, image_path)
+        else:
+            print("No bird detected in the recording")
+    except IndexError:
+        print("Error: No valid detections found")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+
+    '''
+    if recording.detections is not None:
+        species = recording.detections[0]['common_name']
+    
+
     print(f"Detected bird {species}")
     image_path = f"./recordings/image_{timestamp}.jpg"
 
     save_to_database(timestamp, species, audio_path, image_path)
+    '''
 
