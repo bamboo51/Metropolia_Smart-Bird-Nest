@@ -1,16 +1,17 @@
 import sqlite3
 
 def initialize_database():
-    conn = sqlite3.connect('media_records.db')
+    conn = sqlite3.connect('bird_species.db')
     cursor = conn.cursor()
 
     # Create table
     cursor.execute('''
-        CREATE TABLE IF NOT EXISTS media (
+        CREATE TABLE IF NOT EXISTS bird_species (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT NOT NULL,
+            species TEXT NOT NULL,
             image_path TEXT NOT NULL,
-            audio_path TEXT,
+            audio_path TEXT
         )
     ''')
     conn.commit()

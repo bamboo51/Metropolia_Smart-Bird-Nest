@@ -6,7 +6,7 @@ analyzer = Analyzer()
 
 recording = Recording(
     analyzer,
-    "audio_20241121_122443.wav",
+    "./recordings/audio_20241121_142031.wav",
 )
 recording.analyze()
 print(recording.detections)

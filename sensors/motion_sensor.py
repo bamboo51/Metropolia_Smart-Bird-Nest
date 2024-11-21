@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import threading
 import time
 from sensors.camera_stream import start_streaming, stop_streaming, streaming_event, save_frame
-from sensors.audio_record import start_record, stop_record, record_audio_chunk
+from sensors.audio_record import start_record, stop_record
 from datetime import datetime
 
 def motion_detection():
@@ -12,11 +12,16 @@ def motion_detection():
     GPIO.setup(11, GPIO.IN)  # PIR motion sensor input
 
     no_motion_duration = 0  # Duration without motion
-    motion_timeout = 5  # Seconds before stopping stream
+    motion_timeout = 30  # Seconds before stopping stream
+    record_duration = 10  # Seconds to record audio
 
-    def audio_record_thread():
-        while streaming_event.is_set():
-            record_audio_chunk()
+    def limited_audio_record(timestamp):
+        """
+        Record audio for a limited duration (30 seconds).
+        """
+        start_record(timestamp)
+        time.sleep(record_duration)
+        stop_record()
 
     while True:
         motion_detected = GPIO.input(11)
@@ -27,8 +32,8 @@ def motion_detection():
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 start_streaming(timestamp)  # Start streaming when motion is detected
                 save_frame(timestamp)
-                start_record(timestamp)
-                threading.Thread(target=audio_record_thread, daemon=True).start()
+                # Start audio recording in a separate thread with limited duration
+                threading.Thread(target=limited_audio_record, args=(timestamp,), daemon=True).start()
             no_motion_duration = 0  # Reset duration
         else:
             if streaming_event.is_set():
@@ -36,7 +41,6 @@ def motion_detection():
                 if no_motion_duration >= motion_timeout:
                     print("No motion detected for 30 seconds. Stopping stream.")
                     stop_streaming()  # Stop streaming if no motion for a while
-                    stop_record()
                     time.sleep(1)
                     # combine_av(timestamp)
 

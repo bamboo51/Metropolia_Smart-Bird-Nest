@@ -9,7 +9,7 @@ picam2 = Picamera2()
 streaming_event = threading.Event()
 
 picam2.configure(picam2.create_preview_configuration())
-encoder = H264Encoder(10000000)
+# encoder = H264Encoder(10000000)
 
 filename = None
 
@@ -19,12 +19,12 @@ def start_streaming(file_name:str):
         filename = file_name
         picam2.start()
         streaming_event.set()
-        picam2.start_recording(encoder, f'./recordings/video_{filename}.h264')
+        # picam2.start_recording(encoder, f'./recordings/video_{filename}.h264')
         print("Streaming started.")
 
 def stop_streaming():
     if streaming_event.is_set():
-        picam2.stop_recording()
+        # picam2.stop_recording()
         picam2.stop()
         streaming_event.clear()
 
