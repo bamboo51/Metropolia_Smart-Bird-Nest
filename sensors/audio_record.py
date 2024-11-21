@@ -2,6 +2,7 @@ import sounddevice as sd
 import numpy as np
 import wave
 import threading
+from sensors.bird_recog import analyze_bird_sound
 
 sample_rate = 48000
 channels = 1
@@ -9,10 +10,12 @@ frames = []
 filename = None
 is_recording = False
 lock = threading.Lock()
+timestamp = None
 
 def start_record(file_name: str):
-    global frames, filename, is_recording
+    global frames, filename, is_recording, timestamp
     frames = []  # Reset frames for new recording
+    timestamp = file_name
     filename = f"./recordings/audio_{file_name}.wav"
     is_recording = True
 
@@ -38,7 +41,7 @@ def stop_record():
     print("Audio recording stopped.")
 
 def save_record():
-    global frames, filename
+    global frames, filename, timestamp
     with lock:
         # Combine all recorded chunks into a single NumPy array
         audio_data = np.concatenate(frames, axis=0)
@@ -50,6 +53,7 @@ def save_record():
         f.setframerate(sample_rate)
         f.writeframes(audio_data.tobytes())
     print(f"Audio file saved as {filename}")
+    analyze_bird_sound(filename, timestamp)
 
 # Example usage:
 # start_record("test")

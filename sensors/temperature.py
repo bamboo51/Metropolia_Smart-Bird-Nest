@@ -23,6 +23,6 @@ def readDHT22():
 def monitor_temperature():
     while True:
         humidity, temperature = readDHT22()
-        print("Humidity is: " + humidity + "%")
-        print("Temperature is: " + temperature + "C")
+        # print("Humidity is: " + humidity + "%")
+        # print("Temperature is: " + temperature + "C")
         sleep(sleepTime)

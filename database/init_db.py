@@ -11,7 +11,7 @@ def initialize_database():
             timestamp TEXT NOT NULL,
             species TEXT NOT NULL,
             image_path TEXT NOT NULL,
-            audio_path TEXT
+            audio_path TEXT NOT NULL
         )
     ''')
     conn.commit()
