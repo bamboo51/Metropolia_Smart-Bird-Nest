@@ -28,6 +28,13 @@ def stop_streaming():
         picam2.stop()
         streaming_event.clear()
 
+def save_frame(filename: str):
+    """Capture a single frame and save it as an image."""
+    frame = picam2.capture_array()
+    image_path = f'./recordings/image_{filename}.jpg'
+    cv2.imwrite(image_path, cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+    print(f"Frame saved as {image_path}")
+    
 def generate_frames():
     """Generator function that yields camera frames to be displayed as a video stream."""
     while streaming_event.is_set():

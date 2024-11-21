@@ -1,9 +1,7 @@
 import RPi.GPIO as GPIO
 import threading
 import time
-import os
-import subprocess
-from sensors.camera_stream import start_streaming, stop_streaming, streaming_event
+from sensors.camera_stream import start_streaming, stop_streaming, streaming_event, save_frame
 from sensors.audio_record import start_record, stop_record, record_audio_chunk
 from datetime import datetime
 
@@ -20,26 +18,6 @@ def motion_detection():
         while streaming_event.is_set():
             record_audio_chunk()
 
-    def combine_av(filename:str):
-        video_filename = f'video_{filename}.h264'
-        audio_filename = f'audio_{filename}.wav'
-        output_filename = f'output_{filename}.mp4'
-        
-        subprocess.run([
-            'ffmpeg', '-i', video_filename, '-i', audio_filename,
-            '-c:v', 'copy', '-c:a', 'aac', '-strict', 'experimental',
-            output_filename
-        ])
-        print(f"Combined audio and video saved as {output_filename}.")
-        
-        try:
-            os.remove(video_filename)
-            os.remove(audio_filename)
-            print(f"Deleted original files: {video_filename} and {audio_filename}")
-        except OSError as e:
-            print(f"Error deleting files: {e}")
-        print("Streaming stopped.")
-
     while True:
         motion_detected = GPIO.input(11)
         
@@ -48,6 +26,7 @@ def motion_detection():
             if not streaming_event.is_set():
                 timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 start_streaming(timestamp)  # Start streaming when motion is detected
+                save_frame(timestamp)
                 start_record(timestamp)
                 threading.Thread(target=audio_record_thread, daemon=True).start()
             no_motion_duration = 0  # Reset duration

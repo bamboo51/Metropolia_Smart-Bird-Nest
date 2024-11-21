@@ -38,6 +38,6 @@ def save_record():
     global frames, filename
 
     with wave.open(f'{filename}', 'w') as f:
-        f.setparams((1, 2, 16000, 4096, "NONE", "NONE"))
+        f.setparams((1, 2, 48000, 4096, "NONE", "NONE"))
         f.writeframes(struct.pack("h" * len(frames), *frames))
     print(f"Audio file saved as {filename}")
