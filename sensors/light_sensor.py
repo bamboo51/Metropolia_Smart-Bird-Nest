@@ -45,4 +45,4 @@ def monitor_light_sensor():
             else:
                 GPIO.output(LED_PIN, GPIO.HIGH)
             
-        time.sleep(1)
+        time.sleep(10)

@@ -10,7 +10,7 @@ dht22 = DHT22.sensor(pi, 22) # use the actual GPIO pin name
 dht22.trigger()
 
 # We want our sleep time to be above 2 seconds.
-sleepTime = 3
+sleepTime = 10
 
 def readDHT22():
     # Get a new reading
