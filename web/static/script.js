@@ -21,7 +21,7 @@ window.onload = function () {
             document.getElementById('lightsensor-status').textContent = "Error";
         });
     }
-    setInterval(lightSensorStatus, 10*1000);
+    setInterval(lightSensorStatus, 1*1000);
 
     function tempSensorStatus(){
         console.log("temp sensor loading...")
@@ -36,7 +36,7 @@ window.onload = function () {
             document.getElementById('humdsensor-status').textContent = "Error";
         })
     }
-    setInterval(tempSensorStatus, 10*1000);
+    setInterval(tempSensorStatus, 1*1000);
 
     function formatTimestamp(timestamp) {
         // Extract date and time components from the input

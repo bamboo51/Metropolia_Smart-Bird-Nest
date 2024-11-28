@@ -10,16 +10,18 @@ frames = []
 filename = None
 is_recording = False
 lock = threading.Lock()
+recording_event = threading.Event()
 timestamp = None
 
 def start_record(file_name: str):
-    global frames, filename, is_recording, timestamp
+    global frames, filename, is_recording, timestamp, recording_event
     frames = []  # Reset frames for new recording
     timestamp = file_name
     filename = f"./recordings/audio_{file_name}.wav"
     is_recording = True
 
     # Start recording in a separate thread
+    recording_event.set()
     threading.Thread(target=record_audio_stream, daemon=True).start()
     print("Audio recording started.")
 
@@ -35,10 +37,11 @@ def record_audio_stream():
         print(f"Error during recording: {e}")
 
 def stop_record():
-    global is_recording
+    global is_recording, recording_event
     is_recording = False
     save_record()
     print("Audio recording stopped.")
+    recording_event.clear()
 
 def save_record():
     global frames, filename, timestamp

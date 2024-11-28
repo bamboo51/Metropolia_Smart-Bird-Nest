@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import threading
 import time
 from sensors.camera_stream import start_streaming, stop_streaming, streaming_event, save_frame
-from sensors.audio_record import start_record, stop_record
+from sensors.audio_record import start_record, stop_record, recording_event
 from datetime import datetime
 
 def motion_detection():
@@ -27,10 +27,11 @@ def motion_detection():
         motion_detected = GPIO.input(11)
         
         if motion_detected == 1:  # Motion detected
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             print("Intruder detected")
             if not streaming_event.is_set():
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                 start_streaming(timestamp)  # Start streaming when motion is detected
+            if not recording_event.is_set():
                 save_frame(timestamp)
                 # Start audio recording in a separate thread with limited duration
                 threading.Thread(target=limited_audio_record, args=(timestamp,), daemon=True).start()
