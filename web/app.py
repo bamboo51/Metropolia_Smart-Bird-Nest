@@ -29,11 +29,6 @@ def serve_recording(filename):
 def index():
     components = [
         {
-            'icon': 'cpu-fill',
-            'title': 'Raspberry Pi',
-            'description': 'High-performance Microcontroller'
-        },
-        {
             'icon': 'wifi',
             'title': 'Motion Sensor',
             'description': 'Detects movement and triggers actions'
@@ -52,11 +47,35 @@ def index():
             'icon': 'droplet-fill',
             'title': 'Humidity Sensor',
             'description': 'Measure ambient humidity'
+        },
+        {
+            'icon': 'camera-fill',
+            'title': 'IR Camera',
+            'description': 'Stream the video of bird'
+        },
+        {
+            'icon': 'mic-fill',
+            'title': 'Microphone',
+            'description': 'Record the voice of bird vocalization'
         }
     ]
 
     features = [
-        
+        {
+            'icon': 'camera-video',
+            'title': 'Motion-Activated Recording',
+            'description': 'Records only when activity is detected in the nest, optimizing power usage'
+        },
+        {
+            'icon': 'moon-stars',
+            'title': 'Infared night vision',
+            'description': 'Ensures 24/7 monitoring with minimal disturbance during nighttime' 
+        },
+        {
+            'icon': 'broadcast',
+            'title': 'Real-time streamimg',
+            'description': 'Watch birds in action live, directly from the nest, anytime'
+        }
     ]
     return render_template('index.html', components=components, features=features)
 
