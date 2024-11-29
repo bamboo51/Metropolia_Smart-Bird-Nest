@@ -27,7 +27,38 @@ def serve_recording(filename):
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    components = [
+        {
+            'icon': 'cpu-fill',
+            'title': 'Raspberry Pi',
+            'description': 'High-performance Microcontroller'
+        },
+        {
+            'icon': 'wifi',
+            'title': 'Motion Sensor',
+            'description': 'Detects movement and triggers actions'
+        },
+        {
+            'icon': 'brightness-high-fill',
+            'title': 'Light Sensor',
+            'description': 'Measure ambient light levels'
+        },
+        {
+            'icon': 'thermometer-half',
+            'title': 'Temperature Sensor',
+            'description': 'Measure ambient temperature'
+        },
+        {
+            'icon': 'droplet-fill',
+            'title': 'Humidity Sensor',
+            'description': 'Measure ambient humidity'
+        }
+    ]
+
+    features = [
+        
+    ]
+    return render_template('index.html', components=components, features=features)
 
 @app.route('/streaming')
 def streaming():
