@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Records{% endblock %}
+
+{% block content %}
+<main>
+    <!-- Bird Detection Records Section -->
+     <div class="container px-4 py-4">
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Latest Bird Detections</h5>
+                    <span class="badge bg-primary" id="detection-count">0 detections</span>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Time</th>
+                                    <th scope="col">Species</th>
+                                    <th scope="col">Image</th>
+                                    <th scope="col">Audio</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bird-detection-records">
+                                <!-- Records will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>  
+    </div>
+</main>
+
+<style>
+.table img {
+    max-width: 150px;
+    height: auto;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.table img:hover {
+    transform: scale(1.05);
+}
+
+.audio-player {
+    max-width: 200px;
+}
+
+.detection-time {
+    white-space: nowrap;
+    font-family: monospace;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+{% endblock %}

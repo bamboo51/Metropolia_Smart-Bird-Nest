@@ -38,11 +38,11 @@ def monitor_light_sensor():
     while True:
         light_level = read_light_sensor()
         if light_level is not None:
-            print(f"Light level: {light_level:.2f} lux")
+            # print(f"Light level: {light_level:.2f} lux")
 
             if light_level < 20:
                 GPIO.output(LED_PIN, GPIO.LOW)
             else:
                 GPIO.output(LED_PIN, GPIO.HIGH)
             
-        time.sleep(1)
+        time.sleep(10)
