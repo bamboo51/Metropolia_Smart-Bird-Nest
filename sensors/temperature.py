@@ -1,7 +1,6 @@
 import pigpio
 import sensors.DHT22 as DHT22
 from time import sleep
-import os
 
 # Initiate GPIO for pigpio
 pi = pigpio.pi()

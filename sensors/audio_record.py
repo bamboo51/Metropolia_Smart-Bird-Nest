@@ -57,8 +57,3 @@ def save_record():
         f.writeframes(audio_data.tobytes())
     print(f"Audio file saved as {filename}")
     analyze_bird_sound(filename, timestamp)
-
-# Example usage:
-# start_record("test")
-# ...wait while recording...
-# stop_record()
