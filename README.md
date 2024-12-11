@@ -61,12 +61,16 @@ A compact and eco-friendly IoT-based bird monitoring system designed to study bi
    python main.py
 4. Access the web interface at http://<raspberry_pi_ip>:5000.
 
-### Usage
+--
+
+## Usage
 - Real-Time Streaming: View live video and sensor data on the streaming page.
 - Bird Detection Logs: Access the records page for the latest bird sightings, including images and audio.
 - Sensor Data: Retrieve environmental readings via JSON routes for integration with other systems.
 
-### Future Enhancements
+--
+
+## Future Enhancements
 - Optimize solar power and battery efficiency for uninterrupted operation.
 - Enable remote control and monitoring without Wi-Fi for deployment in remote areas.
 - Develop a cloud-based platform to support multiple devices and expand scalability.
