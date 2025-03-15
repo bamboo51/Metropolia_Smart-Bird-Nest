@@ -2,6 +2,8 @@
 
 A compact and eco-friendly IoT-based bird monitoring system designed to study birds’ behavior in their natural habitats without causing disturbances. This project integrates sensors, a Raspberry Pi, and AI-based bird species recognition to provide real-time insights into bird activities, environmental data, and species identification.  
 
+<img src="./figures/diagram.png"/>
+
 ---
 
 ## Features  
@@ -28,7 +30,7 @@ A compact and eco-friendly IoT-based bird monitoring system designed to study bi
 - **Programming Language**: Python  
 - **Web Framework**: Flask  
 - **Video Streaming**: MJPEG-based real-time streaming via HTTP.  
-- **AI Model**: BirdNet for bird species recognition.  
+- **AI Model**: BirdNet for bird species recognition. Ref: Joeweiss, “GitHub - joeweiss/birdnetlib: A python api for BirdNET-Lite and BirdNET-Analyzer,” GitHub. https://github.com/joeweiss/birdnetlib., Birdnet-Team, “GitHub - birdnet-team/BirdNET-Analyzer: BirdNET analyzer for scientific audio data processing.,” GitHub. https://github.com/birdnet-team/BirdNET-Analyzer.
 - **Database**: SQLite3 for storing recognized bird species data.  
 
 ---
